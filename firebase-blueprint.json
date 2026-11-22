@@ -1,0 +1,400 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Catalog item sold on the Toy Tron storefront.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Car Showpieces", "Desk Gadgets", "Collectibles"]
+        },
+        "price": {
+          "type": "number"
+        },
+        "compareAtPrice": {
+          "type": "number"
+        },
+        "tag": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "imageAlt": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 300
+        },
+        "shortDescription": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 300
+        },
+        "description": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 1200
+        },
+        "variants": {
+          "type": "array"
+        },
+        "material": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "dimensions": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "weight": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "scaleOrPower": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "inStock": {
+          "type": "boolean"
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "name",
+        "category",
+        "price",
+        "image",
+        "imageAlt",
+        "shortDescription",
+        "description",
+        "variants",
+        "material",
+        "dimensions",
+        "weight",
+        "scaleOrPower",
+        "inStock",
+        "featured",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StoreConfig": {
+      "title": "StoreConfig",
+      "description": "Global storefront branding, hero promo hook, shipping rules, and public payment gateway configuration.",
+      "type": "object",
+      "properties": {
+        "brandName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "marqueeText": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 260
+        },
+        "heroEyebrow": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "heroTitle": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 140
+        },
+        "heroSubtitle": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 360
+        },
+        "heroCtaLabel": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 50
+        },
+        "heroProductId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "heroImage": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "freeShippingThreshold": {
+          "type": "number"
+        },
+        "shippingFee": {
+          "type": "number"
+        },
+        "codEnabled": {
+          "type": "boolean"
+        },
+        "upiEnabled": {
+          "type": "boolean"
+        },
+        "upiId": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "upiDisplayName": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "razorpayEnabled": {
+          "type": "boolean"
+        },
+        "razorpayKeyId": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "stripeEnabled": {
+          "type": "boolean"
+        },
+        "stripePublishableKey": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "supportEmail": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 120
+        },
+        "bundleDiscountAmount": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "brandName",
+        "marqueeText",
+        "heroEyebrow",
+        "heroTitle",
+        "heroSubtitle",
+        "heroCtaLabel",
+        "heroProductId",
+        "heroImage",
+        "freeShippingThreshold",
+        "shippingFee",
+        "codEnabled",
+        "upiEnabled",
+        "upiId",
+        "upiDisplayName",
+        "razorpayEnabled",
+        "razorpayKeyId",
+        "stripeEnabled",
+        "stripePublishableKey",
+        "supportEmail",
+        "bundleDiscountAmount",
+        "updatedAt"
+      ]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order record with delivery details, line summary, payment mode, and status.",
+      "type": "object",
+      "properties": {
+        "orderNumber": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 24,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerEmail": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "customerName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 15,
+          "pattern": "^[0-9+\\- ]{10,15}$"
+        },
+        "address": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 300
+        },
+        "pincode": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 6,
+          "pattern": "^[0-9]{6}$"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["COD", "UPI", "RAZORPAY", "STRIPE"]
+        },
+        "subtotal": {
+          "type": "number"
+        },
+        "discount": {
+          "type": "number"
+        },
+        "shippingFee": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        },
+        "itemCount": {
+          "type": "number"
+        },
+        "itemsSummary": {
+          "type": "array"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Confirmed", "Packed", "Shipped", "Delivered", "Cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "orderNumber",
+        "customerUid",
+        "customerEmail",
+        "customerName",
+        "phone",
+        "address",
+        "pincode",
+        "paymentMethod",
+        "subtotal",
+        "discount",
+        "shippingFee",
+        "total",
+        "itemCount",
+        "itemsSummary",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private customer profile and saved shipping address.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "fullName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 15
+        },
+        "address": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "pincode": {
+          "type": "string",
+          "maxLength": 6
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "fullName", "updatedAt"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Authorized administrator registry entry.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "addedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "addedAt"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Toy Tron product catalog readable by all shoppers and writable only by admins."
+    },
+    "/storeConfig/{configId}": {
+      "schema": { "$ref": "#/entities/StoreConfig" },
+      "description": "Global storefront appearance, hero promotion, and public payment gateway toggles."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders isolated by customerUid for owners and accessible to admins."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profile and saved shipping details accessible only to the owning user or admins."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Registry of additional admin UIDs managed exclusively by existing admins."
+    }
+  }
+}

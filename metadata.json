@@ -1,0 +1,6 @@
+{
+  "name": "Toy Tron",
+  "description": "Precision die-cast car showpieces, CNC desk gadgets, and designer collectible toys.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
