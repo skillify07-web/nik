@@ -189,6 +189,10 @@
         "bundleDiscountAmount": {
           "type": "number"
         },
+        "whatsappNumber": {
+          "type": "string",
+          "maxLength": 20
+        },
         "updatedAt": {
           "type": "string",
           "format": "date-time"
@@ -288,6 +292,11 @@
           "type": "string",
           "enum": ["Confirmed", "Packed", "Shipped", "Delivered", "Cancelled"]
         },
+        "promoCode": {
+          "type": "string",
+          "maxLength": 24,
+          "pattern": "^[A-Z0-9_\\-]*$"
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time"
@@ -373,6 +382,54 @@
         }
       },
       "required": ["email", "addedAt"]
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Promotional discount code active on Toy Tron checkout.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 24,
+          "pattern": "^[A-Z0-9_\\-]+$"
+        },
+        "discountType": {
+          "type": "string",
+          "enum": ["percent", "flat"]
+        },
+        "discountValue": {
+          "type": "number"
+        },
+        "minOrderAmount": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "code",
+        "discountType",
+        "discountValue",
+        "minOrderAmount",
+        "description",
+        "active",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -383,6 +440,10 @@
     "/storeConfig/{configId}": {
       "schema": { "$ref": "#/entities/StoreConfig" },
       "description": "Global storefront appearance, hero promotion, and public payment gateway toggles."
+    },
+    "/coupons/{couponId}": {
+      "schema": { "$ref": "#/entities/Coupon" },
+      "description": "Active promotional discount coupons readable at checkout and managed exclusively by admins."
     },
     "/orders/{orderId}": {
       "schema": { "$ref": "#/entities/Order" },

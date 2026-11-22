@@ -6,11 +6,13 @@ import {
   Minus,
   Plus,
   ShoppingBag,
+  Tag,
   Trash2,
   X,
 } from 'lucide-react';
 import {
   BUNDLE_ITEMS,
+  type Coupon,
   type PaymentMethodId,
   type Product,
   type StoreConfig,
@@ -29,6 +31,7 @@ interface CartDrawerProps {
   initialStep?: 'bag' | 'checkout';
   items: CartItem[];
   storeConfig: StoreConfig;
+  coupons: Coupon[];
   user: User | null;
   onSignIn: () => Promise<void>;
   onPlaceOrder: (input: NewOrderInput) => Promise<string>;
@@ -59,6 +62,7 @@ export function CartDrawer({
   initialStep = 'bag',
   items,
   storeConfig,
+  coupons,
   user,
   onSignIn,
   onPlaceOrder,
@@ -119,6 +123,9 @@ export function CartDrawer({
   const [pincode, setPincode] = useState('');
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string>('');
+  const [promoError, setPromoError] = useState('');
   const [orderConfirmation, setOrderConfirmation] =
     useState<OrderConfirmation | null>(null);
 
@@ -161,7 +168,33 @@ export function CartDrawer({
   const bundleDiscount = hasCompleteTrioBundle
     ? storeConfig.bundleDiscountAmount
     : 0;
-  const discountedSubtotal = Math.max(0, subtotal - bundleDiscount);
+  const afterBundleSubtotal = Math.max(0, subtotal - bundleDiscount);
+
+  const activeCoupon = useMemo(
+    () =>
+      appliedPromoCode
+        ? coupons.find(
+            (c) => c.active && c.code.toUpperCase() === appliedPromoCode.toUpperCase()
+          ) ?? null
+        : null,
+    [appliedPromoCode, coupons]
+  );
+
+  const couponDiscount = useMemo(() => {
+    if (!activeCoupon || afterBundleSubtotal < activeCoupon.minOrderAmount) {
+      return 0;
+    }
+    if (activeCoupon.discountType === 'percent') {
+      return Math.min(
+        afterBundleSubtotal,
+        Math.round((afterBundleSubtotal * activeCoupon.discountValue) / 100)
+      );
+    }
+    return Math.min(afterBundleSubtotal, Math.round(activeCoupon.discountValue));
+  }, [activeCoupon, afterBundleSubtotal]);
+
+  const totalDiscount = bundleDiscount + couponDiscount;
+  const discountedSubtotal = Math.max(0, subtotal - totalDiscount);
   const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const freeThreshold = storeConfig.freeShippingThreshold;
   const qualifiesFreeShipping = discountedSubtotal >= freeThreshold;
@@ -173,6 +206,28 @@ export function CartDrawer({
     freeThreshold <= 0
       ? 100
       : Math.min(100, Math.round((discountedSubtotal / freeThreshold) * 100));
+
+  const handleApplyPromo = () => {
+    const code = promoInput.trim().toUpperCase();
+    setPromoError('');
+    if (!code) {
+      setPromoError('Enter a promo code first.');
+      return;
+    }
+    const found = coupons.find((c) => c.code.toUpperCase() === code && c.active);
+    if (!found) {
+      setPromoError('Invalid or expired promo code.');
+      return;
+    }
+    if (afterBundleSubtotal < found.minOrderAmount) {
+      setPromoError(
+        `Minimum order ₹${found.minOrderAmount.toLocaleString('en-IN')} required for ${found.code}.`
+      );
+      return;
+    }
+    setAppliedPromoCode(found.code);
+    setPromoInput('');
+  };
 
   const selectedMethodMeta =
     availableMethods.find((m) => m.id === paymentMethod) ?? availableMethods[0];
@@ -217,11 +272,12 @@ export function CartDrawer({
         pincode: pincode.trim(),
         paymentMethod,
         subtotal,
-        discount: bundleDiscount,
+        discount: totalDiscount,
         shippingFee,
         total: grandTotal,
         itemCount: totalCount,
         itemsSummary,
+        promoCode: couponDiscount > 0 && activeCoupon ? activeCoupon.code : undefined,
       });
 
       setOrderConfirmation({
@@ -231,6 +287,8 @@ export function CartDrawer({
         total: grandTotal,
         itemCount: totalCount,
       });
+      setAppliedPromoCode('');
+      setPromoInput('');
       onClearCart();
       setStep('confirmed');
     } catch (err) {
@@ -627,6 +685,54 @@ export function CartDrawer({
         {/* Footer Actions */}
         {items.length > 0 && step !== 'confirmed' && (
           <div className="px-6 py-5 border-t border-zinc-200 bg-zinc-50 space-y-3">
+            {/* Promo Code Box */}
+            {coupons.some((c) => c.active) && (
+              <div className="pb-2 border-b border-zinc-200">
+                {activeCoupon && couponDiscount > 0 ? (
+                  <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-xs">
+                    <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-800">
+                      <Tag className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span className="font-mono">{activeCoupon.code}</span>
+                      <span>applied</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAppliedPromoCode('')}
+                      className="text-emerald-800 hover:text-zinc-950 font-semibold cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoInput}
+                        onChange={(e) => {
+                          setPromoInput(e.target.value.toUpperCase());
+                          if (promoError) setPromoError('');
+                        }}
+                        placeholder="Promo code (e.g. TOYTRON10)"
+                        aria-label="Promo code"
+                        className="flex-1 px-3 py-1.5 text-xs font-mono uppercase rounded-lg border border-zinc-300 bg-white focus:outline-none focus:border-zinc-950"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyPromo}
+                        className="px-3.5 py-1.5 text-xs font-semibold text-white bg-zinc-950 hover:bg-zinc-800 rounded-lg cursor-pointer"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {promoError && (
+                      <p className="mt-1 text-[11px] text-red-700">{promoError}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between text-zinc-600">
                 <span>Subtotal</span>
@@ -639,6 +745,14 @@ export function CartDrawer({
                   <span>Collector’s Trio Bundle Savings</span>
                   <span className="font-mono tabular-nums">
                     −₹{bundleDiscount.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              )}
+              {couponDiscount > 0 && activeCoupon && (
+                <div className="flex justify-between text-emerald-700 font-medium">
+                  <span>Promo ({activeCoupon.code})</span>
+                  <span className="font-mono tabular-nums">
+                    −₹{couponDiscount.toLocaleString('en-IN')}
                   </span>
                 </div>
               )}

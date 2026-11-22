@@ -51,7 +51,25 @@ export interface StoreConfig {
   stripeEnabled: boolean;
   stripePublishableKey: string;
   supportEmail: string;
+  whatsappNumber?: string;
   bundleDiscountAmount: number;
+}
+
+export type CouponDiscountType = 'percent' | 'flat';
+
+export interface Coupon {
+  code: string;
+  discountType: CouponDiscountType;
+  discountValue: number;
+  minOrderAmount: number;
+  description: string;
+  active: boolean;
+}
+
+export interface AdminMember {
+  uid: string;
+  email: string;
+  addedAtMs: number;
 }
 
 export interface OrderRecord {
@@ -71,6 +89,7 @@ export interface OrderRecord {
   itemCount: number;
   itemsSummary: string[];
   status: OrderStatus;
+  promoCode?: string;
   createdAtMs: number;
 }
 
@@ -135,8 +154,28 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
   stripeEnabled: false,
   stripePublishableKey: '',
   supportEmail: 'support@toytron.in',
+  whatsappNumber: '',
   bundleDiscountAmount: 2000,
 };
+
+export const DEFAULT_COUPONS: Coupon[] = [
+  {
+    code: 'TOYTRON10',
+    discountType: 'percent',
+    discountValue: 10,
+    minOrderAmount: 1499,
+    description: '10% off orders ₹1,499 and above',
+    active: true,
+  },
+  {
+    code: 'WHEELS200',
+    discountType: 'flat',
+    discountValue: 200,
+    minOrderAmount: 999,
+    description: 'Flat ₹200 off Hot Wheels & Car Showpieces above ₹999',
+    active: true,
+  },
+];
 
 export const HOTWHEELS_PROMO_PRODUCT: Product = {
   id: 'hot-wheels-track-legends',

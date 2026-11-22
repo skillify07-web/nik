@@ -101,7 +101,7 @@ service cloud.firestore {
         'freeShippingThreshold', 'shippingFee', 'codEnabled', 'upiEnabled',
         'upiId', 'upiDisplayName', 'razorpayEnabled', 'razorpayKeyId',
         'stripeEnabled', 'stripePublishableKey', 'supportEmail',
-        'bundleDiscountAmount', 'updatedAt'
+        'bundleDiscountAmount', 'whatsappNumber', 'updatedAt'
       ]) &&
       isNonEmptyString(data.brandName, 2, 40) &&
       isNonEmptyString(data.marqueeText, 5, 260) &&
@@ -123,6 +123,27 @@ service cloud.firestore {
       data.stripePublishableKey is string && data.stripePublishableKey.size() <= 120 &&
       isNonEmptyString(data.supportEmail, 5, 120) &&
       data.bundleDiscountAmount is number && data.bundleDiscountAmount >= 0 && data.bundleDiscountAmount <= 50000 &&
+      (!('whatsappNumber' in data) || (data.whatsappNumber is string && data.whatsappNumber.size() <= 20)) &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidCoupon(data) {
+      return data.keys().hasAll([
+        'code', 'discountType', 'discountValue', 'minOrderAmount',
+        'description', 'active', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'code', 'discountType', 'discountValue', 'minOrderAmount',
+        'description', 'active', 'createdAt', 'updatedAt'
+      ]) &&
+      data.code is string && data.code.size() >= 3 && data.code.size() <= 24 && data.code.matches('^[A-Z0-9_\\-]+$') &&
+      data.discountType in ['percent', 'flat'] &&
+      data.discountValue is number && data.discountValue >= 1 &&
+      ((data.discountType == 'percent' && data.discountValue <= 90) || (data.discountType == 'flat' && data.discountValue <= 50000)) &&
+      data.minOrderAmount is number && data.minOrderAmount >= 0 && data.minOrderAmount <= 1000000 &&
+      data.description is string && data.description.size() <= 160 &&
+      data.active is bool &&
+      data.createdAt is timestamp &&
       data.updatedAt is timestamp;
     }
 
@@ -137,7 +158,7 @@ service cloud.firestore {
         'orderNumber', 'customerUid', 'customerEmail', 'customerName',
         'phone', 'address', 'pincode', 'paymentMethod',
         'subtotal', 'discount', 'shippingFee', 'total',
-        'itemCount', 'itemsSummary', 'status', 'createdAt', 'updatedAt'
+        'itemCount', 'itemsSummary', 'status', 'promoCode', 'createdAt', 'updatedAt'
       ]) &&
       isValidId(data.orderNumber) &&
       isValidId(data.customerUid) &&
@@ -155,6 +176,7 @@ service cloud.firestore {
       data.itemsSummary is list && data.itemsSummary.size() >= 1 && data.itemsSummary.size() <= 25 &&
       data.itemsSummary[0] is string && data.itemsSummary[0].size() >= 1 && data.itemsSummary[0].size() <= 160 &&
       data.status in ['Confirmed', 'Packed', 'Shipped', 'Delivered', 'Cancelled'] &&
+      (!('promoCode' in data) || (data.promoCode is string && data.promoCode.size() <= 24 && data.promoCode.matches('^[A-Z0-9_\\-]*$'))) &&
       data.createdAt is timestamp &&
       data.updatedAt is timestamp;
     }
@@ -223,6 +245,28 @@ service cloud.firestore {
         incoming().updatedAt == request.time;
 
       allow delete: if isValidId(configId) && isAdmin();
+    }
+
+    // Promotional Coupons: Public read for checkout discount validation, Admin-only write
+    match /coupons/{couponId} {
+      allow get: if isValidId(couponId);
+      allow list: if true;
+
+      allow create: if isValidId(couponId) &&
+        isAdmin() &&
+        isValidCoupon(incoming()) &&
+        incoming().code == couponId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isValidId(couponId) &&
+        isAdmin() &&
+        isValidCoupon(incoming()) &&
+        incoming().code == existing().code &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time;
+
+      allow delete: if isValidId(couponId) && isAdmin();
     }
 
     // Customer Orders (PII Isolated): Owner or Admin read; Verified customer create; Admin status update

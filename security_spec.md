@@ -1,12 +1,12 @@
 # Security Specification — Toy Tron Storefront & Admin Console
 
 ## 1. Data Invariants
-1. **Public Catalog Integrity**: `products` and `storeConfig` are publicly readable for storefront browsing, while all mutations (`create`, `update`, `delete`) require a verified administrator (`isAdmin()`).
-2. **No Private Payment Secrets in Client/Firestore**: `storeConfig` stores strictly public gateway identifiers (`razorpayKeyId`, `stripePublishableKey`, `upiId`) and boolean toggles; secret keys (`sk_live_*`, Razorpay Key Secret) are never persisted in Firestore or exposed in client bundles.
+1. **Public Catalog Integrity**: `products`, `storeConfig`, and `coupons` are publicly readable for storefront browsing/checkout validation, while all mutations (`create`, `update`, `delete`) require a verified administrator (`isAdmin()`).
+2. **No Private Payment Secrets in Client/Firestore**: `storeConfig` stores strictly public gateway identifiers (`razorpayKeyId`, `stripePublishableKey`, `upiId`, `whatsappNumber`) and boolean toggles; secret keys (`sk_live_*`, Razorpay Key Secret) are never persisted in Firestore or exposed in client bundles.
 3. **Order Ownership & PII Isolation**: Every `order` document includes PII (`phone`, `address`, `pincode`, `customerEmail`). Reads (`get` and `list`) are strictly restricted to the owning `customerUid` or `isAdmin()`.
 4. **Order Immutability & Status Governance**: Customers can only create orders with `customerUid == request.auth.uid`, initial status `'Confirmed'`, and server timestamps (`request.time`). Customers cannot mutate order status, totals, or ownership after placement; only admins can advance `status` or edit order state.
-5. **Privilege Escalation Prevention**: Only verified admins (`skillify07@gmail.com` with `email_verified == true` or existing `/admins/{uid}` entries) can write to `/admins`, `/products`, or `/storeConfig`. Standard user profiles in `/users/{userId}` have no role or privilege fields.
-6. **Bounded Payloads & Safe URLs**: All strings enforce explicit `.size()` bounds, document IDs match `^[a-zA-Z0-9_\-]+$`, arrays (`variants`, `itemsSummary`) are bounded (`<= 8` / `<= 25`), and image URLs reject `javascript:` / `data:` schemes.
+5. **Privilege Escalation Prevention**: Only verified admins (`skillify07@gmail.com` with `email_verified == true` or existing `/admins/{uid}` entries) can write to `/admins`, `/products`, `/coupons`, or `/storeConfig`. Standard user profiles in `/users/{userId}` have no role or privilege fields.
+6. **Bounded Payloads & Safe URLs**: All strings enforce explicit `.size()` bounds, document IDs match `^[a-zA-Z0-9_\-]+$`, arrays (`variants`, `itemsSummary`) are bounded (`<= 8` / `<= 25`), coupon percentages are bounded (`<= 90`), and image URLs reject `javascript:` / `data:` schemes.
 
 ## 2. Red Team "Dirty Dozen" Payloads (Expected: `PERMISSION_DENIED`)
 1. **Unauthenticated Product Write**: Anonymous `create` on `/products/fake-car` -> Denied (`isAdmin()` fails).
@@ -20,4 +20,4 @@
 9. **Client Timestamp Forgery**: Shopper A submits `createdAt` set to past date instead of `serverTimestamp()` -> Denied (`incoming().createdAt == request.time`).
 10. **ID Poisoning**: Admin/user attempts write with 200-char or slash-injected document ID -> Denied (`isValidId()` fails).
 11. **XSS Scheme in Product Image**: Admin or attacker submits `image: "javascript:alert(1)"` -> Denied (`isSafeMediaUrl()` rejects).
-12. **Self-Admin Escalation**: Regular signed-in user attempts `setDoc(/admins/{myUid})` -> Denied (`isAdmin()` required).
+12. **Self-Admin Escalation & Coupon Tampering**: Regular signed-in user attempts `setDoc(/admins/{myUid})` or `setDoc(/coupons/FREE100)` -> Denied (`isAdmin()` required).

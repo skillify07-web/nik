@@ -27,17 +27,30 @@ export default function App() {
   const {
     user,
     isAdmin,
+    isRootAdmin,
     products,
     hasCloudProducts,
     storeConfig,
     hasCloudConfig,
+    coupons,
+    hasCloudCoupons,
     orders,
+    adminMembers,
     signInWithGoogle,
+    signInWithEmail,
+    linkEmailPassword,
+    resendVerificationEmail,
     signOutUser,
     seedInitialStoreData,
     saveProduct,
+    toggleProductStock,
     deleteProduct,
     saveStoreConfig,
+    saveCoupon,
+    toggleCouponActive,
+    deleteCoupon,
+    addAdminMember,
+    removeAdminMember,
     placeOrder,
     updateOrderStatus,
   } = useStoreData();
@@ -187,19 +200,32 @@ export default function App() {
       <AdminConsole
         user={user}
         isAdmin={isAdmin}
+        isRootAdmin={isRootAdmin}
         products={products}
         hasCloudProducts={hasCloudProducts}
         hasCloudConfig={hasCloudConfig}
+        hasCloudCoupons={hasCloudCoupons}
         storeConfig={storeConfig}
+        coupons={coupons}
         orders={orders}
+        adminMembers={adminMembers}
         onBackToStore={() => setViewMode('storefront')}
         onSignIn={signInWithGoogle}
+        onEmailSignIn={signInWithEmail}
+        onLinkPassword={linkEmailPassword}
+        onResendVerification={resendVerificationEmail}
         onSignOut={signOutUser}
         onSeedCloud={seedInitialStoreData}
         onSaveProduct={saveProduct}
+        onToggleProductStock={toggleProductStock}
         onDeleteProduct={deleteProduct}
         onSaveConfig={saveStoreConfig}
+        onSaveCoupon={saveCoupon}
+        onToggleCouponActive={toggleCouponActive}
+        onDeleteCoupon={deleteCoupon}
         onUpdateOrderStatus={updateOrderStatus}
+        onAddAdmin={addAdminMember}
+        onRemoveAdmin={removeAdminMember}
       />
     );
   }
@@ -628,6 +654,9 @@ export default function App() {
             <p className="mt-1 text-xs text-zinc-500">
               © 2026 {storeConfig.brandName} Collectibles &amp; Gadgets ·{' '}
               {storeConfig.supportEmail}
+              {storeConfig.whatsappNumber
+                ? ` · WhatsApp: ${storeConfig.whatsappNumber}`
+                : ''}
             </p>
           </div>
 
@@ -679,6 +708,7 @@ export default function App() {
         initialStep={cartInitialStep}
         items={cartItems}
         storeConfig={storeConfig}
+        coupons={coupons}
         user={user}
         onSignIn={signInWithGoogle}
         onPlaceOrder={placeOrder}
